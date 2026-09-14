@@ -47,7 +47,18 @@ This is an independent educational explorer, **not affiliated with Steinway & So
 
 ## Deploy
 
-Import this repository into Vercel as a Vite project. The included `vercel.json` configures `npm ci`, `npm run build`, and the `dist` output directory.
+### Cloudflare Workers (static assets)
+
+```sh
+npm ci
+npm run deploy
+```
+
+This builds the Vite app into `dist/` and uploads it as a Workers static-assets SPA (`wrangler.jsonc`). You can also connect the GitHub repository to Cloudflare so each push deploys automatically.
+
+### Vercel
+
+Import this repository as a Vite project. The included `vercel.json` configures `npm ci`, `npm run build`, and the `dist` output directory.
 
 ## License
 
