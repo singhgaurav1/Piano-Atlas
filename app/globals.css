@@ -61,10 +61,10 @@ a { color: inherit; }
 button svg, a svg { flex-shrink: 0; }
 
 .studio { height: 100dvh; min-height: 340px; width: 100%; position: relative; isolation: isolate; }
-.scene { position: absolute; inset: 0; }
+.scene { position: absolute; inset: 0; z-index: 0; }
 .scene canvas { display: block; width: 100%; height: 100%; touch-action: none; cursor: grab; }
 .scene canvas:active { cursor: grabbing; }
-.vignette { position: absolute; inset: 0; pointer-events: none; background: radial-gradient(ellipse at 52% 42%, transparent 38%, #6d635618 100%); }
+.vignette { position: absolute; inset: 0; pointer-events: none; z-index: 1; background: radial-gradient(ellipse at 52% 42%, transparent 38%, #6d635618 100%); }
 
 .glass {
   background: #fffcf6eb;
@@ -103,7 +103,7 @@ h1 .edition {
 
 .layers-panel {
   position: absolute; left: 30px; top: 200px; bottom: 175px; width: 254px; max-height: 654px;
-  display: flex; flex-direction: column; padding: 18px 14px 0; z-index: 10;
+  display: flex; flex-direction: column; padding: 18px 14px 0; z-index: 15;
 }
 .panel-heading { display: flex; align-items: center; justify-content: space-between; font-size: 13px; font-weight: 600; color: #2a2420; min-height: 22px; padding: 0 3px; }
 .small-number { font-size: 10px; font-variant-numeric: tabular-nums; color: #7a7268; background: #efe8db; height: 21px; padding: 0 7px; border-radius: 999px; display: inline-flex; align-items: center; }
@@ -129,10 +129,10 @@ h1 .edition {
 .view-controls i { height: 1px; background: #2a242015; margin: 5px; }
 .view-controls button:disabled { opacity: 0.22; background: none; }
 
-.scene-caption { position: absolute; bottom: 162px; left: 50%; transform: translateX(-50%); display: flex; gap: 15px; align-items: center; color: #8a8378; letter-spacing: 0.14em; font-size: 9px; white-space: nowrap; pointer-events: none; max-width: calc(100% - 32px); }
+.scene-caption { position: absolute; bottom: 162px; left: 50%; transform: translateX(-50%); display: flex; gap: 15px; align-items: center; color: #8a8378; letter-spacing: 0.14em; font-size: 9px; white-space: nowrap; pointer-events: none; max-width: calc(100% - 32px); z-index: 5; }
 .caption-line { width: 24px; height: 1px; background: #2a242022; flex-shrink: 0; }
 
-.bottom-dock { position: absolute; bottom: 54px; left: 50%; transform: translateX(-50%); width: 460px; padding: 17px 20px; display: flex; gap: 21px; align-items: center; z-index: 12; }
+.bottom-dock { position: absolute; bottom: 54px; left: 50%; transform: translateX(-50%); width: 460px; padding: 17px 20px; display: flex; gap: 21px; align-items: center; z-index: 15; }
 .explode-control { flex: 1; min-width: 0; }
 .explode-label { display: flex; align-items: center; justify-content: space-between; font-size: 12px; font-weight: 500; margin-bottom: 10px; color: #3a342e; }
 .explode-label output { background: #efe8db; border: 1px solid #2a242008; border-radius: 6px; padding: 3px 7px; font-size: 12px; min-width: 49px; text-align: center; font-variant-numeric: tabular-nums; }
@@ -140,12 +140,12 @@ h1 .edition {
 .explode-control [data-slot='slider'] { padding: 9px 0; }
 .explode-control [data-slot='slider-thumb'] { width: 16px; height: 16px; border: 3px solid white; background: #2a2420; box-shadow: 0 0 0 1px #2a242030, 0 2px 5px #2a242018; }
 .slider-endpoints { display: flex; justify-content: space-between; font-size: 10px; color: #8a8378; margin-top: 3px; }
-.slider-endpoints button { font-size: 10px; color: #8a8378; padding: 4px 0; min-height: 24px; }
+.slider-endpoints button { font-size: 10px; color: #8a8378; padding: 8px 4px; min-height: 32px; }
 .slider-endpoints button:hover { color: #2a2420; }
 .dock-reset { border-left: 1px solid #2a242018; padding: 10px 0 10px 20px; display: flex; flex-direction: column; gap: 7px; align-items: center; color: #6f675c; font-size: 10px; height: auto; border-radius: 0; }
 .mobile-only { display: none; }
 
-.studio-footer { position: absolute; bottom: 20px; left: 30px; right: 30px; display: flex; justify-content: space-between; font-size: 11px; color: #7a7268; }
+.studio-footer { position: absolute; bottom: 20px; left: 30px; right: 30px; display: flex; justify-content: space-between; font-size: 11px; color: #7a7268; z-index: 15; }
 .studio-footer b { font-weight: 400; margin: 0 8px; color: #b0a89c; }
 .studio-footer button { display: flex; gap: 6px; align-items: center; color: #7a7268; font-size: 11px; height: auto; padding: 0; }
 

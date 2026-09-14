@@ -15,7 +15,7 @@ interface Props {
 }
 
 const MAT: Record<MatName, {color: string; metalness: number; roughness: number; clearcoat?: number}> = {
-  ebony: {color: '#1c1b1f', metalness: 0.2, roughness: 0.3, clearcoat: 0.7},
+  ebony: {color: '#121114', metalness: 0.12, roughness: 0.28, clearcoat: 0.82},
   ivory: {color: '#f4efe4', metalness: 0.04, roughness: 0.46},
   sharp: {color: '#141416', metalness: 0.14, roughness: 0.36, clearcoat: 0.45},
   brass: {color: '#c6a45c', metalness: 0.92, roughness: 0.26},
@@ -65,7 +65,7 @@ function material(name: MatName) {
     roughness: m.roughness,
     clearcoat: m.clearcoat ?? 0,
     clearcoatRoughness: 0.25,
-    envMapIntensity: 0.9,
+    envMapIntensity: m.clearcoat ? 0.55 : 0.75,
     side: THREE.DoubleSide,
   });
 }
@@ -131,7 +131,7 @@ export default function PianoScene({state, onSelect, onHover}: Props) {
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
     renderer.toneMappingExposure = 1.08;
     renderer.shadowMap.enabled = true;
-    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    renderer.shadowMap.type = THREE.PCFShadowMap;
     el.appendChild(renderer.domElement);
     renderer.domElement.setAttribute('aria-label', 'Interactive Steinway Model D. Drag to orbit, pinch or scroll to zoom, tap a part to inspect it.');
 
@@ -368,7 +368,7 @@ export default function PianoScene({state, onSelect, onHover}: Props) {
       }
       const selection = new Set(s.selected);
       const visibleSystems = new Set(s.visible);
-      const nextLayoutKey = `${s.visible.join(',')}|${s.isolate}|${s.selected.join(',')}|${camera.aspect.toFixed(2)}`;
+      const nextLayoutKey = `${s.visible.join(',')}|${s.isolate}|${s.selected.join(',')}|${s.playingNote}|${camera.aspect.toFixed(2)}`;
       const visiblePieces = PIANO.pieces.filter(p => s.isolate ? selection.has(p.id) : visibleSystems.has(p.system) || selection.has(p.id));
       if (nextLayoutKey !== layoutKey) {
         const layout = createExplosionLayout(visiblePieces, camera.aspect);
@@ -382,6 +382,7 @@ export default function PianoScene({state, onSelect, onHover}: Props) {
             : new THREE.Vector3();
         });
         layoutKey = nextLayoutKey;
+        dirty = true;
         if (amount > 0.05 && !s.isolate) fit(s.view, Math.max(0, (amount - 0.3) / 0.7));
       }
 

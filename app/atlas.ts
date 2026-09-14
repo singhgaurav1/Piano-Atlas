@@ -377,7 +377,7 @@ export function buildConcepts(parts: PartInfo[]): Concept[] {
   for (const p of parts) if (p.note) byNote.set(p.note, [...(byNote.get(p.note) ?? []), p.id]);
   const notes: Concept[] = NOTES.map(n => ({
     id: `note-${n.n}`,
-    name: `${n.name}${n.n === 40 ? ' · middle C' : n.n === 49 ? ' · A440' : ''} — note ${n.n}`,
+    name: `${n.name}${n.n === 40 ? ' · middle C' : n.n === 49 ? ' · A440' : ''} · note ${n.n}`,
     kind: 'note',
     parts: byNote.get(n.n) ?? [],
     summary: `Every part that sounds ${describeNote(n)}: key, wippen, hammer, ${n.damped ? 'damper, ' : ''}${n.strings === 1 ? 'string' : `${n.strings} unison strings`}, tuning pin${n.strings > 1 ? 's' : ''}${n.capo ? '' : ' and agraffe'}. ${formatFrequency(n.frequency)}.`,

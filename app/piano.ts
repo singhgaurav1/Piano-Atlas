@@ -200,12 +200,12 @@ export function buildPiano() {
     add(pieces, parts, staticPart('leg', i), 'cyl', 'ebony', p, [0.042, DIM.keybedY, 0.042], {pack: [0.1, 0.18]});
     add(pieces, parts, staticPart('caster', i), 'caster', 'brass', [p[0], 0.035, p[2]], [0.028, 0.028, 0.028], {pack: [0.08, 0.08]});
   });
-  add(pieces, parts, staticPart('lyre'), 'lyre', 'ebony', [0, 0.22, 0.2], [1, 1, 1], {pack: [0.16, 0.14], size: [0.34, 0.48, 0.16]});
-  add(pieces, parts, staticPart('lyre-brace', 0), 'box', 'ebony', [-0.1, 0.34, 0.38], [0.02, 0.02, 0.42], {rotation: [0.4, 0, 0]});
-  add(pieces, parts, staticPart('lyre-brace', 1), 'box', 'ebony', [0.1, 0.34, 0.38], [0.02, 0.02, 0.42], {rotation: [0.4, 0, 0]});
+  add(pieces, parts, staticPart('lyre'), 'lyre', 'ebony', [0, 0.16, 0.18], [1, 1, 1], {pack: [0.16, 0.14], size: [0.34, 0.48, 0.16]});
+  add(pieces, parts, staticPart('lyre-brace', 0), 'box', 'ebony', [-0.1, 0.36, 0.34], [0.02, 0.02, 0.38], {rotation: [0.45, 0, 0]});
+  add(pieces, parts, staticPart('lyre-brace', 1), 'box', 'ebony', [0.1, 0.36, 0.34], [0.02, 0.02, 0.38], {rotation: [0.45, 0, 0]});
   const pedals = [-0.09, 0, 0.09];
-  pedals.forEach((x, i) => add(pieces, parts, staticPart('pedal', i), 'box', 'brass', [x, 0.105, 0.07], [0.028, 0.012, 0.11], {pack: [0.08, 0.07]}));
-  add(pieces, parts, staticPart('trapwork'), 'box', 'blued', [0, 0.28, 0.16], [0.2, 0.22, 0.02], {pack: [0.1, 0.1]});
+  pedals.forEach((x, i) => add(pieces, parts, staticPart('pedal', i), 'box', 'brass', [x, 0.118, 0.115], [0.028, 0.012, 0.11], {pack: [0.08, 0.07]}));
+  add(pieces, parts, staticPart('trapwork'), 'box', 'blued', [0, 0.3, 0.17], [0.18, 0.2, 0.016], {pack: [0.1, 0.1]});
 
   add(pieces, parts, staticPart('keybed'), 'box', 'spruce', [0, DIM.keybedY - DIM.keybedT / 2, 0.28], [1.36, DIM.keybedT, 0.56], {pack: [0.24, 0.12]});
   add(pieces, parts, staticPart('key-frame'), 'box', 'maple', [0, DIM.keybedY + 0.008, 0.26], [1.24, 0.016, 0.5], {pack: [0.22, 0.1]});
