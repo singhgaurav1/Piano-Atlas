@@ -1,11 +1,10 @@
 import {useEffect, useMemo, useRef, useState} from 'react';
-import {ArrowUpRight, ChevronRight, Focus, Info, Layers3, Pause, Play, RotateCcw, RotateCw, Search, Volume2, X} from 'lucide-react';
+import {ArrowUpRight, ChevronRight, Focus, Info, Layers3, Pause, Play, RotateCcw, RotateCw, Search, X} from 'lucide-react';
 import {Button} from '@/components/ui/button';
 import {Badge} from '@/components/ui/badge';
+import {Input} from '@/components/ui/input';
 import {Slider} from '@/components/ui/slider';
 import {Switch} from '@/components/ui/switch';
-import {Sheet, SheetContent, SheetTitle, SheetDescription} from '@/components/ui/sheet';
-import {Combobox, ComboboxInput, ComboboxContent, ComboboxList, ComboboxItem, ComboboxEmpty} from '@/components/ui/combobox';
 import PianoScene from './scene';
 import {playPitch} from './audio';
 import {
@@ -26,20 +25,14 @@ const initial: SceneState = {
 };
 
 export default function Home() {
-  const detailTitle = useRef<HTMLHeadingElement>(null);
   const [state, setState] = useState(initial);
+  const [hover, setHover] = useState({id: '', x: 0, y: 0});
   const [panel, setPanel] = useState<'layers' | 'search' | null>(null);
   const [details, setDetails] = useState(false);
   const [about, setAbout] = useState(false);
   const [query, setQuery] = useState('');
   const [chosen, setChosen] = useState<Concept | null>(null);
-  const [hover, setHover] = useState({id: '', x: 0, y: 0});
-  const [ready, setReady] = useState(false);
-
-  useEffect(() => {
-    const t = window.setTimeout(() => setReady(true), 40);
-    return () => window.clearTimeout(t);
-  }, []);
+  const searchRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     const key = (e: KeyboardEvent) => {
@@ -47,6 +40,7 @@ export default function Home() {
         e.preventDefault();
         setPanel('search');
         setDetails(false);
+        setAbout(false);
       }
       if (e.key === 'Escape') {
         setPanel(null);
@@ -57,6 +51,10 @@ export default function Home() {
     window.addEventListener('keydown', key);
     return () => window.removeEventListener('keydown', key);
   }, []);
+
+  useEffect(() => {
+    if (panel === 'search') searchRef.current?.focus();
+  }, [panel]);
 
   const parts = useMemo(() => new Map(PIANO.parts.map(p => [p.id, p])), []);
   const counts = useMemo(() => Object.fromEntries(SYSTEMS.map(s => [s.id, PIANO.pieces.filter(p => p.system === s.id).length])), []);
@@ -73,11 +71,18 @@ export default function Home() {
       const featured = ['note-40', 'note-49', 'note-1', 'note-88', 'patents', 'bridges', 'pedals', 'system-strings'];
       return featured.map(id => list.find(c => c.id === id)).filter((x): x is Concept => !!x);
     }
+    const hay = (c: Concept) => {
+      const extras = c.parts.slice(0, 8).map(id => {
+        const p = parts.get(id);
+        return p ? `${p.name} ${(p.tags ?? []).join(' ')}` : '';
+      }).join(' ');
+      return `${c.name} ${c.id} ${c.summary ?? ''} ${extras}`.toLowerCase();
+    };
     return list
-      .filter(c => c.name.toLowerCase().includes(term) || c.id.toLowerCase().includes(term) || (c.summary ?? '').toLowerCase().includes(term))
+      .filter(c => hay(c).includes(term))
       .sort((a, b) => a.name.length - b.name.length)
       .slice(0, 80);
-  }, [query]);
+  }, [query, parts]);
 
   const playSelected = (note?: number) => {
     const n = note ?? selected?.note;
@@ -182,30 +187,23 @@ export default function Home() {
             <span>Find a part or note</span>
             <Button variant="ghost" className="icon-button" onClick={() => setPanel(null)} aria-label="Close search"><X size={18} /></Button>
           </div>
-          <Combobox<Concept>
-            items={results}
-            value={null}
-            onValueChange={value => { if (value) choose(value); }}
-            inputValue={query}
-            onInputValueChange={setQuery}
-            itemToStringLabel={c => c.name}
-            filter={null}
-            open
-            onOpenChange={open => { if (!open) setPanel(null); }}
-          >
-            <ComboboxInput autoFocus placeholder="Middle C, duplex scale, sostenuto…" aria-label="Search named piano parts and notes" showTrigger={false} />
-            <ComboboxContent className="anatomy-search-results">
-              <ComboboxEmpty>No parts match your search.</ComboboxEmpty>
-              <ComboboxList>
-                {(c: Concept) => (
-                  <ComboboxItem key={c.id} value={c}>
-                    <span className="search-result-name">{c.name}</span>
-                    <span className="small-number">{c.parts.length} {c.parts.length === 1 ? 'piece' : 'pieces'}</span>
-                  </ComboboxItem>
-                )}
-              </ComboboxList>
-            </ComboboxContent>
-          </Combobox>
+          <Input
+            ref={searchRef}
+            value={query}
+            onChange={e => setQuery(e.target.value)}
+            placeholder="Middle C, duplex scale, sostenuto…"
+            aria-label="Search named piano parts and notes"
+            className="anatomy-search-input"
+          />
+          <div className="anatomy-search-results" role="listbox" aria-label="Matching parts">
+            {results.length === 0 && <p className="search-empty">No parts match your search.</p>}
+            {results.map(c => (
+              <Button variant="ghost" role="option" key={c.id} className="search-result" onClick={() => choose(c)}>
+                <span className="search-result-name">{c.name}</span>
+                <span className="small-number">{c.parts.length} {c.parts.length === 1 ? 'piece' : 'pieces'}</span>
+              </Button>
+            ))}
+          </div>
           <p className="search-note">{query ? 'Showing up to 80 matches.' : 'Start with a note, a pedal, or a patented Steinway feature.'}</p>
         </section>
       )}
@@ -236,7 +234,10 @@ export default function Home() {
             <output>{Math.round(state.explode * 100)}<span>%</span></output>
           </div>
           <Slider aria-labelledby="explode-label" min={0} max={100} step={1} value={[state.explode * 100]} onValueChange={v => setState(s => ({...s, explode: (Array.isArray(v) ? v[0] : v) / 100, view: (Array.isArray(v) ? v[0] : v) > 80 ? 'front' : s.view, rotate: false}))} />
-          <div className="slider-endpoints"><span>Assembled</span><span>Every piece</span></div>
+          <div className="slider-endpoints">
+            <button type="button" onClick={() => setState(s => ({...s, explode: 0, rotate: false}))}>Assembled</button>
+            <button type="button" onClick={() => setState(s => ({...s, explode: 1, view: 'front', rotate: false}))}>Every piece</button>
+          </div>
         </div>
         <Button variant="ghost" className="dock-reset" onClick={reset} aria-label="Assemble and reset">
           <RotateCcw size={18} /><span>Reset</span>
@@ -246,29 +247,21 @@ export default function Home() {
         <span>{state.explode > 0.8 ? 'Drag to pan' : 'Drag to orbit'} <b>·</b> Pinch to zoom <b>·</b> Tap to inspect</span>
         <Button variant="ghost" onClick={() => { setDetails(false); setPanel(null); setAbout(true); }}>Sources &amp; credits <ArrowUpRight size={12} /></Button>
       </footer>
-      {!ready && (
-        <div className="loading glass" role="status">
-          <Volume2 size={18} />
-          <div>
-            <strong>Preparing the concert grand</strong>
-            <span>{COUNTS.pieces.toLocaleString()} pieces · {COUNTS.strings} speaking lengths</span>
-          </div>
-        </div>
-      )}
       {hoverPart && (
-        <div className="part-hover" style={{left: Math.max(8, Math.min(hover.x + 14, 900)), top: Math.max(8, hover.y + 18)}}>
+        <div className="part-hover" style={{left: Math.max(8, Math.min(hover.x + 14, window.innerWidth - 220)), top: Math.max(8, hover.y + 18)}}>
           {hoverPart.name}
         </div>
       )}
-      <Sheet open={details && selectedParts.length > 0} modal={false} disablePointerDismissal onOpenChange={setDetails}>
-        <SheetContent initialFocus={detailTitle} className={`detail-sheet glass ${state.isolate ? 'is-isolated' : ''}`} showCloseButton={true}>
+      {details && selectedParts.length > 0 && (
+        <aside className={`detail-sheet glass ${state.isolate ? 'is-isolated' : ''}`} aria-label="Part details">
           <div className="detail-header">
             <div className="detail-accent" style={{background: system?.color}} />
             <div className="eyebrow">{system?.name ?? 'PIANO'}</div>
-            <SheetTitle ref={detailTitle} tabIndex={-1} className="structure-title">{chosen?.name ?? selected?.name}</SheetTitle>
+            <h2 className="structure-title">{chosen?.name ?? selected?.name}</h2>
+            <Button variant="ghost" className="icon-button detail-close" onClick={() => setDetails(false)} aria-label="Close details"><X size={16} /></Button>
           </div>
           <div className="detail-scroll" key={`${chosen?.id}-${state.isolate}`}>
-            <SheetDescription className="structure-description">{selected?.summary ?? chosen?.summary}</SheetDescription>
+            <p className="structure-description">{selected?.summary ?? chosen?.summary}</p>
             {selected?.modeled && <span className="context-note">{selected.modeled}</span>}
             {selected && (
               <dl className="specs">{selected.specs.map(([a, b]) => <div key={a}><dt>{a}</dt><dd>{b}</dd></div>)}</dl>
@@ -309,13 +302,14 @@ export default function Home() {
             </Button>
             <Button variant="ghost" className="secondary-action" onClick={() => { setState(s => ({...s, selected: [], isolate: false})); setDetails(false); }}>Clear selection</Button>
           </div>
-        </SheetContent>
-      </Sheet>
-      <Sheet open={about} onOpenChange={setAbout}>
-        <SheetContent className="about-sheet glass">
+        </aside>
+      )}
+      {about && (
+        <aside className="about-sheet glass" aria-label="Sources and credits">
+          <Button variant="ghost" className="icon-button detail-close" onClick={() => setAbout(false)} aria-label="Close sources"><X size={16} /></Button>
           <div className="eyebrow">SOURCE &amp; SCOPE</div>
-          <SheetTitle className="structure-title">A concert grand, revealed.</SheetTitle>
-          <SheetDescription>Explore a cited, piece-by-piece atlas of the Steinway &amp; Sons Model D concert grand.</SheetDescription>
+          <h2 className="structure-title">A concert grand, revealed.</h2>
+          <p className="structure-description">Explore a cited, piece-by-piece atlas of the Steinway &amp; Sons Model D concert grand.</p>
           <div className="about-copy">
             <p><strong>Steinway Model D-274</strong><br />8′ 11¾″ (274 cm) long, 61¾″ (156 cm) wide, 1,064 lb (483 kg). {COUNTS.pieces.toLocaleString()} selectable pieces, including {COUNTS.keys} keys, {COUNTS.hammers} hammers, {COUNTS.strings} speaking lengths and {COUNTS.pins} tuning pins.</p>
             <p>Published specifications (dimensions, materials, tension, patents) come from Steinway &amp; Sons, the Piano Technicians Guild, Wikipedia, and original U.S. patents. Individual speaking lengths, the 8+5+75 unison split, the last damped note and the visual geometry are modeled from those figures — they are not factory measurements. Every panel that uses a modeled value says so.</p>
@@ -325,8 +319,8 @@ export default function Home() {
               <a key={src.id} href={src.url} target="_blank" rel="noreferrer">{src.title} <ArrowUpRight size={14} /></a>
             ))}
           </div>
-        </SheetContent>
-      </Sheet>
+        </aside>
+      )}
     </main>
   );
 }

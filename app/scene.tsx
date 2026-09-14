@@ -6,7 +6,7 @@ import {createExplosionLayout} from './explosion-layout';
 import {PointerTap} from './pointer-tap';
 import {PIANO, SYSTEM_OFFSET, type GeomName, type MatName, type Piece} from './piano';
 import {agraffeGeometry, casterGeometry, damperGeometry, hammerGeometry, lidGeometry, lyreGeometry, plateGeometry, rimGeometry, soundboardGeometry, whiteKeyGeometry, wippenGeometry} from './shape';
-import type {SceneState, SystemId} from './atlas';
+import type {PartKind, SceneState} from './atlas';
 
 interface Props {
   state: SceneState;
@@ -66,10 +66,46 @@ function material(name: MatName) {
     clearcoat: m.clearcoat ?? 0,
     clearcoatRoughness: 0.25,
     envMapIntensity: 0.9,
+    side: THREE.DoubleSide,
   });
 }
 
 type Slot = {piece: Piece; key: string; index: number};
+
+/** Lower ranks are preferred when several meshes sit on the same click. */
+function pickRank(kind: PartKind) {
+  switch (kind) {
+    case 'key':
+    case 'hammer':
+    case 'wippen':
+    case 'damper':
+    case 'string':
+    case 'tuning-pin':
+    case 'agraffe':
+    case 'pedal':
+    case 'caster':
+      return 0;
+    case 'music-desk':
+    case 'fallboard':
+    case 'hammer-rail':
+    case 'wippen-rail':
+    case 'rest-rail':
+    case 'action-bracket':
+    case 'sostenuto-rod':
+    case 'lid-prop':
+    case 'lid-flap':
+      return 1;
+    case 'key-frame':
+    case 'keybed':
+    case 'pinblock':
+    case 'damper-frame':
+    case 'damper-guide':
+    case 'trapwork':
+      return 2;
+    default:
+      return 3;
+  }
+}
 
 export default function PianoScene({state, onSelect, onHover}: Props) {
   const host = useRef<HTMLDivElement>(null);
@@ -103,13 +139,13 @@ export default function PianoScene({state, onSelect, onHover}: Props) {
     scene.fog = new THREE.Fog('#ece8df', 8, 22);
     const camera = new THREE.PerspectiveCamera(34, 1, 0.02, 80);
     const controls = new OrbitControls(camera, renderer.domElement);
-    camera.position.set(-2.6, 1.85, -2.35);
-    controls.target.set(0, 0.82, 1.05);
+    camera.position.set(-3.6, 2.55, -4.15);
+    controls.target.set(0, 0.88, 1.15);
     controls.enableDamping = true;
     controls.dampingFactor = 0.08;
     controls.minDistance = 0.25;
     controls.maxDistance = 28;
-    controls.maxPolarAngle = Math.PI * 0.49;
+    controls.maxPolarAngle = Math.PI * 0.495;
     controls.addEventListener('change', () => { dirty = true; });
 
     const pmrem = new THREE.PMREMGenerator(renderer);
@@ -231,15 +267,15 @@ export default function PianoScene({state, onSelect, onHover}: Props) {
     const fit = (view: SceneState['view'], extent = 0) => {
       const mobile = el.clientWidth < 768;
       const tangent = Math.tan(THREE.MathUtils.degToRad(camera.fov / 2));
-      const assembled = mobile ? 4.6 : 3.9;
+      const assembled = mobile ? 6.4 : 5.8;
       const atlas = Math.max(packingHeight, packingWidth / Math.max(0.4, camera.aspect)) / (2 * tangent) * 1.2 + 0.6;
       const distance = THREE.MathUtils.lerp(assembled, Math.max(assembled, atlas), extent);
       if (extent > 0.8) view = 'front';
       const dir =
-        view === 'front' ? new THREE.Vector3(0, 0.08, -1) :
-        view === 'side' ? new THREE.Vector3(-1, 0.08, 0.12) :
-        view === 'top' ? new THREE.Vector3(0.02, 1, 0.001) :
-        new THREE.Vector3(-0.55, 0.32, -0.72).normalize();
+        view === 'front' ? new THREE.Vector3(0, 0.12, -1) :
+        view === 'side' ? new THREE.Vector3(-1, 0.14, 0.08) :
+        view === 'top' ? new THREE.Vector3(0.02, 1, 0.08) :
+        new THREE.Vector3(-0.48, 0.38, -0.78).normalize();
       const target = new THREE.Vector3(extent > 0.15 ? 0 : 0, extent > 0.15 ? 1.15 : 0.78, extent > 0.15 ? 0.2 : 1.05);
       controls.target.copy(target);
       camera.position.copy(target).addScaledVector(dir, distance);
@@ -261,6 +297,29 @@ export default function PianoScene({state, onSelect, onHover}: Props) {
     const raycaster = new THREE.Raycaster();
     const pointer = new THREE.Vector2();
     const tap = new PointerTap();
+    const slotFromHit = (hit: THREE.Intersection): Slot | undefined => {
+      const mesh = hit.object as THREE.Mesh;
+      if (mesh instanceof THREE.InstancedMesh) {
+        const idx = mesh.userData[`i${hit.instanceId ?? 0}`];
+        return typeof idx === 'number' ? slots[idx] : undefined;
+      }
+      return slots[mesh.userData.slot0];
+    };
+    const pickSlot = (hits: THREE.Intersection[]) => {
+      const resolved: {slot: Slot; distance: number; rank: number}[] = [];
+      for (const hit of hits) {
+        if (!hit.object.visible) continue;
+        const slot = slotFromHit(hit);
+        if (!slot || !visibleSet.has(slot.piece.id)) continue;
+        resolved.push({slot, distance: hit.distance, rank: pickRank(slot.piece.kind)});
+      }
+      if (!resolved.length) return;
+      const nearest = resolved[0].distance;
+      const precise = resolved.find(h => h.rank === 0 && h.distance <= nearest + 0.55);
+      if (precise && resolved[0].rank >= 1) return precise.slot;
+      resolved.sort((a, b) => (a.distance + a.rank * 0.16) - (b.distance + b.rank * 0.16));
+      return resolved[0].slot;
+    };
     const down = (e: PointerEvent) => tap.down(e.pointerId, e.clientX, e.clientY, e.pointerType === 'touch' ? 12 : 5);
     const move = (e: PointerEvent) => {
       tap.move(e.pointerId, e.clientX, e.clientY);
@@ -271,18 +330,9 @@ export default function PianoScene({state, onSelect, onHover}: Props) {
       const rect = el.getBoundingClientRect();
       pointer.set((e.clientX - rect.left) / rect.width * 2 - 1, -(e.clientY - rect.top) / rect.height * 2 + 1);
       raycaster.setFromCamera(pointer, camera);
-      const hits = raycaster.intersectObjects(meshes, false);
-      const hit = hits.find(h => h.object.visible);
-      if (!hit) {
+      const slot = pickSlot(raycaster.intersectObjects(meshes, false));
+      if (!slot) {
         renderer.domElement.style.cursor = 'grab';
-        hover.current('', 0, 0);
-        return;
-      }
-      const mesh = hit.object as THREE.Mesh;
-      const slot = mesh instanceof THREE.InstancedMesh
-        ? slots.find(s => s.key === mesh.userData.group && s.index === (hit.instanceId ?? 0))
-        : slots[mesh.userData.slot0];
-      if (!slot || !visibleSet.has(slot.piece.id)) {
         hover.current('', 0, 0);
         return;
       }
@@ -294,14 +344,8 @@ export default function PianoScene({state, onSelect, onHover}: Props) {
       const rect = renderer.domElement.getBoundingClientRect();
       pointer.set((e.clientX - rect.left) / rect.width * 2 - 1, -(e.clientY - rect.top) / rect.height * 2 + 1);
       raycaster.setFromCamera(pointer, camera);
-      const hits = raycaster.intersectObjects(meshes, false);
-      const hit = hits.find(h => h.object.visible);
-      if (!hit) return;
-      const mesh = hit.object as THREE.Mesh;
-      const slot = mesh instanceof THREE.InstancedMesh
-        ? slots.find(s => s.key === mesh.userData.group && s.index === (hit.instanceId ?? 0))
-        : slots[mesh.userData.slot0];
-      if (slot && visibleSet.has(slot.piece.id)) select.current(slot.piece.id);
+      const slot = pickSlot(raycaster.intersectObjects(meshes, false));
+      if (slot) select.current(slot.piece.id);
     };
     renderer.domElement.addEventListener('pointerdown', down);
     renderer.domElement.addEventListener('pointermove', move);
@@ -357,9 +401,10 @@ export default function PianoScene({state, onSelect, onHover}: Props) {
         pos.addScaledVector(offsets[i], tInv);
         let extraX = 0, extraY = 0;
         if (s.playingNote && p.note === s.playingNote) {
-          const k = 1;
-          if (p.kind === 'key') extraX = p.info.kind === 'key' && !p.note ? 0 : 0.09;
-          if (p.kind === 'key') extraY = -0.006;
+          if (p.kind === 'key') {
+            extraX = 0.09;
+            extraY = -0.006;
+          }
           if (p.kind === 'hammer') extraX = -0.42;
           if (p.kind === 'damper') extraY = 0.014;
         }

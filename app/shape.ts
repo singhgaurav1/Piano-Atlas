@@ -89,6 +89,7 @@ export function grandShape(inset = 0) {
 
 function flatten(g: THREE.BufferGeometry) {
   g.rotateX(-Math.PI / 2);
+  g.scale(1, 1, -1);
   g.computeVertexNormals();
   return g;
 }
@@ -130,9 +131,12 @@ export function soundboardGeometry() {
 }
 
 export function plateGeometry() {
-  const outer = grandOuter().map(p => new THREE.Vector2(p.x * 0.92, Math.max(0.27, p.y)));
-  const shape = makeShape(insetPoly(outer, 0.07));
-  const g = extrude(shape, 0.022, true);
+  const outer = grandOuter().map(p => new THREE.Vector2(p.x * 0.94, Math.max(0.26, p.y)));
+  const rim = insetPoly(outer, 0.035);
+  const well = insetPoly(outer, 0.16);
+  const shape = makeShape(rim);
+  shape.holes.push(makeShape(well));
+  const g = extrude(shape, 0.024, true);
   g.translate(0, DIM.plateY, 0);
   return g;
 }
@@ -162,7 +166,8 @@ function keyShape(kind: 'C' | 'D' | 'E' | 'F' | 'G' | 'A' | 'B' | 'End') {
   s.closePath();
   const g = new THREE.ExtrudeGeometry(s, {depth: 1, bevelEnabled: false});
   g.rotateX(-Math.PI / 2);
-  g.translate(0, 0.5, 0);
+  g.scale(1, 1, -1);
+  g.translate(0, 0.5, 0.5);
   g.computeVertexNormals();
   return g;
 }

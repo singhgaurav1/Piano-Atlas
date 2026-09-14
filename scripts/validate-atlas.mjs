@@ -20,6 +20,8 @@ check(PIANO.parts.every(p => p.sources.every(id => SOURCES[id])), 'part missing 
 check(Math.abs(NOTES[0].speakingLength - 2.01) < 1e-6, 'A0 speaking length should be 2.01 m');
 check(Math.abs(NOTES[48].frequency - 440) < 1e-6, 'A4 should be 440 Hz');
 check(Object.keys(SOURCES).length >= 12, 'not enough cited sources');
+check(PIANO.concepts.some(c => c.id === 'note-40' && /middle c/i.test(c.name)), 'middle C concept missing');
+check(PIANO.concepts.some(c => c.id === 'note-49' && /a440/i.test(c.name)), 'A440 concept missing');
 
 const layout = (await import('../app/explosion-layout.ts')).createExplosionLayout(PIANO.pieces, 1.6);
 check(layout.cells.size === PIANO.pieces.length, 'layout missing pieces');

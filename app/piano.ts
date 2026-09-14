@@ -170,24 +170,24 @@ export function buildPiano() {
 
   add(pieces, parts, staticPart('rim'), 'rim', 'ebony', [0, 0, 0], [1, 1, 1], {pack: [0.42, 0.28], size: [1.56, 0.31, 2.58]});
   add(pieces, parts, staticPart('lid'), 'lid', 'ebony', [-DIM.W / 2, DIM.keybedY + DIM.caseH, 0], [1, 1, 1], {
-    rotation: [0, 0, 0.92],
+    rotation: [0, 0, 0.68],
     pack: [0.4, 0.26],
     size: [1.56, 0.02, 2.6],
   });
-  add(pieces, parts, staticPart('lid-flap'), 'box', 'ebony', [-0.08, DIM.keybedY + DIM.caseH + 0.62, 0.38], [1.48, DIM.lidT, 0.4], {
-    rotation: [0.2, 0, 0.92],
+  add(pieces, parts, staticPart('lid-flap'), 'box', 'ebony', [-0.18, DIM.keybedY + DIM.caseH + 0.5, 1.05], [1.36, DIM.lidT, 0.34], {
+    rotation: [0, 0, 0.68],
     pack: [0.22, 0.12],
   });
   add(pieces, parts, staticPart('lid-prop'), 'cyl', 'maple', [0.52, DIM.keybedY + DIM.caseH + 0.42, 1.15], [0.012, 0.95, 0.012], {
     rotation: [0.55, 0, 0.15],
     pack: [0.08, 0.18],
   });
-  add(pieces, parts, staticPart('fallboard'), 'box', 'ebony', [0, DIM.keybedY + 0.09, 0.168], [1.24, 0.09, 0.018], {pack: [0.2, 0.1]});
+  add(pieces, parts, staticPart('fallboard'), 'box', 'ebony', [0, DIM.keybedY + 0.078, KEY_Z0 + DIM.whiteVis + 0.02], [1.22, 0.042, 0.012], {pack: [0.2, 0.1]});
   add(pieces, parts, staticPart('keyslip'), 'box', 'ebony', [0, DIM.keybedY - 0.01, 0.004], [1.26, 0.028, 0.012], {pack: [0.18, 0.06]});
   add(pieces, parts, staticPart('cheek', 0), 'box', 'ebony', [X0 - 0.04, DIM.keybedY + 0.04, 0.085], [0.072, 0.09, 0.17], {pack: [0.1, 0.1]});
   add(pieces, parts, staticPart('cheek', 1), 'box', 'ebony', [-X0 + 0.04, DIM.keybedY + 0.04, 0.085], [0.072, 0.09, 0.17], {pack: [0.1, 0.1]});
-  add(pieces, parts, staticPart('music-desk'), 'box', 'spruce', [0, DIM.keybedY + 0.22, 0.42], [0.72, 0.012, 0.28], {
-    rotation: [-0.55, 0, 0],
+  add(pieces, parts, staticPart('music-desk'), 'box', 'spruce', [0, DIM.keybedY + 0.36, 0.72], [0.5, 0.008, 0.16], {
+    rotation: [-0.92, 0, 0],
     pack: [0.18, 0.12],
   });
 
@@ -213,12 +213,12 @@ export function buildPiano() {
   for (const note of NOTES) {
     const x = keyX(note);
     if (!note.sharp) {
-      add(pieces, parts, describeKey(note), whiteGeom(note), 'ivory', [x, KEY_Y, KEY_Z0], [WHITE_W * 0.98, DIM.keyH, DIM.whiteLen], {
+      add(pieces, parts, describeKey(note), whiteGeom(note), 'ivory', [x, KEY_Y, KEY_Z0 + DIM.whiteLen / 2], [WHITE_W * 0.97, DIM.keyH, DIM.whiteLen], {
         pack: [0.065, 0.12],
         size: [WHITE_W, DIM.keyH, DIM.whiteLen],
       });
     } else {
-      add(pieces, parts, describeKey(note), 'box', 'sharp', [x, KEY_Y + 0.008, KEY_Z0 + 0.012], [DIM.blackW, DIM.keyH + DIM.blackH, DIM.blackVis], {
+      add(pieces, parts, describeKey(note), 'box', 'sharp', [x, KEY_Y + DIM.blackH * 0.65, KEY_Z0 + DIM.blackVis / 2 + 0.012], [DIM.blackW, DIM.keyH + DIM.blackH, DIM.blackVis], {
         pack: [0.05, 0.1],
       });
     }
